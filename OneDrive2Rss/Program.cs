@@ -28,7 +28,7 @@ namespace OneDrive2Rss
 
             string path = await GetOneDriveFolderPathAsync(folderItemId);
 
-            var directoryPath = args[0];
+            var directoryPath = args.Length > 0 ? args[0] : ".";
             var di = new DirectoryInfo(directoryPath);
             var syndicationItems = di
                 .EnumerateFiles("*.mp3")
