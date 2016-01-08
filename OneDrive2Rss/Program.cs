@@ -1,37 +1,75 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.ServiceModel.Syndication;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace OneDrive2Rss
 {
     class Program
     {
-        private static readonly string UrlFormatString = "https://api.onedrive.com/v1.0/drives/{0}/root:/public/podcast:/children";
-        private static readonly string AudioUrlFormatString = "https://api.onedrive.com/v1.0/drives/{0}/root:/public/podcast/{1}:/content";
+        private const string OneDriveBaseUrl = "https://api.onedrive.com/v1.0";
 
         static void Main(string[] args)
         {
+            Task.Run(() => MainAsync(args)).Wait();
+        }
+
+        private static async Task MainAsync(string[] args)
+        {
             var feedTitle = ConfigurationManager.AppSettings["FeedTitle"];
             var description = ConfigurationManager.AppSettings["FeedDescription"];
-            var deviceId = ConfigurationManager.AppSettings["OneDriveDeviceId"];
+            var folderItemId = ConfigurationManager.AppSettings["OneDrive:FolderItemId"];
 
-            var feedLink = string.Format(UrlFormatString, deviceId);
+            string path = await GetOneDriveFolderPathAsync(folderItemId);
 
             var directoryPath = args[0];
             var di = new DirectoryInfo(directoryPath);
-            var syndicationItems = di.EnumerateFiles("*.mp3").Select(f =>
-                new SyndicationItem(f.Name, SyndicationContent.CreateUrlContent(new Uri(string.Format(AudioUrlFormatString, deviceId, f.Name)), "application/mp3"), null, null, f.CreationTime)
-);
-            var feed = new SyndicationFeed(feedTitle, description, new Uri(feedLink), syndicationItems);
+            var syndicationItems = di
+                .EnumerateFiles("*.mp3")
+                .Select(file => GetSyndicationItem(path, file));
+            var feed = new SyndicationFeed(feedTitle, description, null, syndicationItems);
 
             using (var textWriter = new XmlTextWriter(Path.Combine(directoryPath, "rss.xml"), Encoding.UTF8))
             {
                 feed.SaveAsRss20(textWriter);
             }
+        }
+
+        private static async Task<string> GetOneDriveFolderPathAsync(string folderItemId)
+        {
+            string response;
+            using (var client = new HttpClient())
+            {
+                var url = $"{OneDriveBaseUrl}/drive/items/{folderItemId}";
+                response = await client.GetStringAsync(url);
+            }
+            var json = JObject.Parse(response);
+
+            var parentPath = json["parentReference"].Value<string>("path");
+            var name = json.Value<string>("name");
+
+            return $"{parentPath}/{name}";
+        }
+
+        private static SyndicationItem GetSyndicationItem(string path, FileInfo file)
+        {
+            var url = GetOneDriveMp3Url(path, file.Name);
+
+            var syndicationItem = new SyndicationItem(file.Name, string.Empty, null, null, file.CreationTime);
+            syndicationItem.Links.Add(SyndicationLink.CreateMediaEnclosureLink(url, "application/mp3", 0));
+
+            return syndicationItem;
+        }
+
+        private static Uri GetOneDriveMp3Url(string path, string name)
+        {
+            return new Uri($"{OneDriveBaseUrl}{path}/{name}:/content");
         }
     }
 }
