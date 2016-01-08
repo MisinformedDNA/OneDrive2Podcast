@@ -32,6 +32,7 @@ namespace OneDrive2Rss
             var di = new DirectoryInfo(directoryPath);
             var syndicationItems = di
                 .EnumerateFiles("*.mp3")
+                .OrderByDescending(f => f.CreationTime)
                 .Select(file => GetSyndicationItem(path, file));
             var feed = new SyndicationFeed(feedTitle, description, null, syndicationItems);
 
