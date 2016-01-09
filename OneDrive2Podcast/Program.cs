@@ -14,6 +14,7 @@ namespace OneDrive2Podcast
     class Program
     {
         private const string OneDriveBaseUrl = "https://api.onedrive.com/v1.0";
+        private const string RssXml = "rss.xml";
 
         static void Main(string[] args)
         {
@@ -34,9 +35,9 @@ namespace OneDrive2Podcast
                 .EnumerateFiles("*.mp3")
                 .OrderByDescending(f => f.CreationTime)
                 .Select(file => GetSyndicationItem(path, file));
-            var feed = new SyndicationFeed(feedTitle, description, null, syndicationItems);
+            var feed = new SyndicationFeed(feedTitle, description, GetOneDriveFileUrl(path, RssXml), syndicationItems);
 
-            using (var textWriter = new XmlTextWriter(Path.Combine(directoryPath, "rss.xml"), Encoding.UTF8))
+            using (var textWriter = new XmlTextWriter(Path.Combine(directoryPath, RssXml), Encoding.UTF8))
             {
                 feed.SaveAsRss20(textWriter);
             }
@@ -60,7 +61,7 @@ namespace OneDrive2Podcast
 
         private static SyndicationItem GetSyndicationItem(string path, FileInfo file)
         {
-            var url = GetOneDriveMp3Url(path, file.Name);
+            var url = GetOneDriveFileUrl(path, file.Name);
 
             var syndicationItem = new SyndicationItem(file.Name, string.Empty, null, null, file.CreationTime);
             syndicationItem.Links.Add(SyndicationLink.CreateMediaEnclosureLink(url, "application/mp3", 0));
@@ -68,7 +69,7 @@ namespace OneDrive2Podcast
             return syndicationItem;
         }
 
-        private static Uri GetOneDriveMp3Url(string path, string name)
+        private static Uri GetOneDriveFileUrl(string path, string name)
         {
             return new Uri($"{OneDriveBaseUrl}{path}/{name}:/content");
         }
