@@ -2,7 +2,7 @@
 A simple executable for turning a folder of media files into a podcast feed, hosted on OneDrive.
 
 ## Get the Executable
-- Downloa
+- Download the source and compile it
 
 ## How to Use
 1. Go to https://onedrive.com
