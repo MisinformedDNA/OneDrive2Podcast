@@ -17,6 +17,7 @@ A simple executable for turning a folder of media files into a podcast feed, hos
 1. Replace `[FOLDER_ITEM_ID]` with the copied value and then save
 1. Run the executable by double clicking it
 1. You now have a generated RSS feed!
-2. Open the RSS file in OneDrive
-1. Copy the generated URL and paste it in your favorite podcatcher
+2. Open the RSS file 
+3. Your RSS URL will be in '//rss/channel/link' and will look something like https://api.onedrive.com/v1.0/drives/0123456ABCDEFGHI/root:/Public/Podcast/rss.xml:/content
+1. Copy and paste the URL into your favorite podcatcher
 1. Enjoy!
