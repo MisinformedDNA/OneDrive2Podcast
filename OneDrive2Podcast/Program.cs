@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace OneDrive2Rss
+namespace OneDrive2Podcast
 {
     class Program
     {
